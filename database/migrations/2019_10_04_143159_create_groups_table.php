@@ -15,9 +15,10 @@ class CreateGroupsTable extends Migration
     {
         Schema::create('groups', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->text('title');
             $table->text('info');
             $table->timestamps();
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->softDeletes();  
             $table->foreign('user_id')->references('id')->on('users');
         });

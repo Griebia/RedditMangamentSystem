@@ -15,6 +15,7 @@ class CreatePostsTable extends Migration
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->string('subreddit');
             $table->string('url');
             $table->string('title');
             $table->string('sr');

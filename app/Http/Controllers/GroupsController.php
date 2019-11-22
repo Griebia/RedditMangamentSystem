@@ -6,9 +6,19 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Group;
 use App\Http\Resources\Group as GroupResource;
+use Illuminate\Database\QueryException as QueryException;
 
 class GroupsController extends Controller
 {
+
+    public function getRedditSubmissions($id)
+    {
+        $group = Group::findOrFail($id);
+        $string = config('constants.redditApi');
+        $result = shell_exec("python " . resource_path(). "\python\getSubreddits.py " . escapeshellarg($string['client_id']). " ". escapeshellarg($string['client_secret']). " ". escapeshellarg($string['redirect_uri'])." " . escapeshellarg($group['info']));
+        return $result;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -24,16 +34,6 @@ class GroupsController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -41,13 +41,17 @@ class GroupsController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try{
         $group = $request->isMethod('put') ? Group::findOrFail($request->group_id) : new Group;
         $group->id = $request->input('group_id');
+        $group->title = $request->input('title');
         $group->info = $request->input('info');
-        if($group ->save()){
-            return new GroupResource($group);
+        $group ->save();
         }
+        catch(QueryException $something){
+            return response()->json(['message' => $something->getMessage()],400);
+        }
+        return new GroupResource($group);
     }
 
     /**
@@ -65,28 +69,6 @@ class GroupsController extends Controller
         return new GroupResource($group);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
 
     /**
      * Remove the specified resource from storage.
@@ -98,9 +80,7 @@ class GroupsController extends Controller
     {
         //Get group
         $group = Group::findOrFail($id);
-
-        if ($group->delete()) {
-            return new GroupResource($group);
-        }
+        $group->delete(); 
+        return new GroupResource($group);
     }
 }
